@@ -12,13 +12,13 @@ Read when your judgments are settled. You write one input file of judgments and 
 
 **Questions and observations.** A question states the evidence, how the answer changes the decision, and who or what can supply it, and asks for no code change. An observation states an evidenced fact without `should` or `must`.
 
-**Summary.** State the intent, how the change fits its issues, what you covered, and how each check was settled. Without an issue, say alignment was unavailable and name the intent source. Every unmet requirement has a finding or a question. The example omits two optional `summary` keys. `coverage_gaps` holds one line for each unreviewed file or missing check with what would recover it, and `ambiguities` holds entries of `term`, two or more `readings`, and the reading `applied`. Keep the summary short. The finalizer leads with status and findings and collapses routine detail.
+**Summary.** State the intent, how the change fits its issues, what you covered, and how each check was settled. Without an issue, say alignment was unavailable and name the intent source. Every unmet requirement has a finding or a question. The example omits two optional `summary` keys. `coverage_gaps` holds one line for each unreviewed file with what would recover it, and `ambiguities` holds entries of `term`, two or more `readings`, and the reading `applied`. Keep the summary short. The finalizer leads with status and findings and collapses routine detail.
 
 **The private record.** `record` holds the accounting behind the review: each requirement with its disposition, each changed file's state, each check, each verification task and batch, and what stays open. It is how a later run or a caller audits this one.
 
 ## Identity
 
-`workflow=v5b-34` versions review behavior for the duplicate-review shortcut. Raise it in `render_review.py` and here whenever admission, verification, rendering, or prior-state rules change. List caller-supplied issues and specs in `run.specs`. The finalizer derives the rest of the run trailer.
+`workflow=v5b-35` versions review behavior for the duplicate-review shortcut. Raise it in `render_review.py` and here whenever admission, verification, rendering, or prior-state rules change. List caller-supplied issues and specs in `run.specs`. The finalizer derives the rest of the run trailer.
 
 ## Finalize
 

@@ -25,7 +25,7 @@ Keep dated evidence and superseded decisions in the [history](../../docs/review-
 
 ## Current mechanics
 
-Workflow `v5b-34` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+Workflow `v5b-35` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
 
 **Compact presentation.** Workflow `v5b-28` changes rendering. The summary leads with outcome and findings; routine context, detailed checks, observations, and settled history collapse under `Review details`. Unresolved items and coverage gaps stay visible. Composition still requires a finding's trigger, impact, and change separately, but the renderer combines their prose and optional source without field labels. Payload validation checks for explanatory prose instead of reconstructing those fields from visible labels. Priority, action, hidden trailers, pinned coordinates, status, and publication events keep their meanings.
 
@@ -37,12 +37,13 @@ Workflow `v5b-34` versions admission, verification, rendering, and state semanti
 - an unclassified or unknown prior item;
 - an open item the run does not render again, or an open `must-fix` it downgrades;
 - a settled item rendered again;
-- a dropped `outstanding` entry that no task settled;
+- a dropped `outstanding` entry that no task, and no check recorded at the final head under its id, settled;
 - a dropped `routed` entry that no task released, unless the item is unresolved or disputed and its settlement released the entry;
 - a batch for a phase the prior spent, or spent flags below the prior's;
 - a carried confirmation whose `confirmed_in` and `batch` differ from the provenance on the prior's own task, or whose accounting does not confirm it;
 - an explicit lineage other than the prior's lineage plus the prior;
-- a delta review from a prior that left a changed file `unreviewed`.
+- a delta review from a prior that left a changed file `unreviewed`;
+- a carried premise that the prior did not settle with the same id, area, text and head.
 
 The check looks back only one record, so it cannot see a second run that also continued from an ancestor. The caller therefore keeps its latest accepted record and requires that record, and every earlier record it accepted, in the final record's lineage.
 
@@ -53,6 +54,18 @@ The check looks back only one record, so it cannot see a second run that also co
 **Verifier returns.** A brief assigns `return.json` inside its newly created bundle; the worker creates it and replies with only its path, and accounting reads that path alone, as a regular file reached through no link. An `--inline` build assigns no file, and the primary saves the inline response verbatim, as it does when a worker's write fails. Every build generates a fresh opaque `bundle_id`, stores it in the manifest and prints it after the brief's return encoding, and the worker copies it into its return; a rebuild of the same input gets a new ID. Accounting refuses a bundle whose manifest no longer matches its input, brief and printed ID, or that an older builder wrote, and withholds every task of a return whose `bundle_id` is not the bundle's. The finalizer requires each batch's accounting report to carry its bundle's ID and manifest hash. `--repair-of` records a repaired return's original, which must carry the bundle's ID. Structural success is only structural, and a repair grants no batch.
 
 **Open risks.** [#347's measurement](../../docs/research/review-code-artifact-savings-2026-09-22/combined.md) found no overall cost or latency saving, more finalizer repairs under the stricter preconditions, verifier returns still inline under Claude Code, and primaries still opening worker-only references. Epic #355 removes machinery instead of automating it further. Rewriting a finalized record in place after a later record names it in its lineage is unsupported; nothing guards it now that no addenda directory exists.
+
+## Delta re-reviews challenge only what the delta affects, issue #450, 2026-10-22
+
+In sampled delta re-reviews, 40 to 55 percent of the time went to the verifier round trip, and a 7-line delta still spent 3 minutes there. Every sampled delta re-review sent the verifier optional tasks and challenged safety premises for the whole pull request again. The reviewer could not tell which premises an earlier round had checked, because the rulings stayed in the private record.
+
+On a delta review, `prior-state.md` now sends optional verifier tasks only when the delta touches security, data integrity, destructive migration, compatibility, concurrency or failover. Each optional candidate task on a delta review names that `area`, and the finalizer refuses one without it. Failover is accepted there because it is a trigger in `SKILL.md`, although the premise areas still leave it out.
+
+The summary now lists every settled premise under `Settled premises` in the collapsed details, with the head that settled it. A `holds` premise task is settled at the reviewed head. A premise the delta and new evidence leave alone is copied into `record.verification.carried_premises` with its original head, and the next round reads the list again. A premise missing from the list is unchecked, so a premise no earlier round settled is still challenged before approval. Only a delta review carries premises, and a carried premise cannot share an id with a task in the same run. A local `prior_record` run may carry only a premise the prior record settled, with the same id, area, text and head. The finalizer can't check a pull-request run's list against the earlier review without parsing its body, so that rule stays an instruction, as it does for `Unfinished verification`.
+
+#448's open question was a gap tied to no file, such as a check that never ran. A delta can follow such a gap, and nothing carried it. Such a gap now goes in `outstanding`, with the check as its id. `run.coverage` is incomplete only when `files` or `verification` is, and `coverage_gaps` holds only unreviewed files. A local run keeps the entry until a task, or a check recorded at the final head under that id with a result, settles it. A result here is `accepted`, `reviewer-executed`, `pending` or `failed`; `unavailable` settles nothing.
+
+The rubric's check outcomes now match `EVIDENCE_OUTCOMES`: `failed` is added and `unused` is gone. Required verification is unchanged. The summary renders a new section and the delta rules change what a run verifies, so the workflow advances to `v5b-35`. A record from before `v5b-35` still loads as a prior record and carries no premises.
 
 ## Delta re-reviews after unfinished verification, issue #448, 2026-10-22
 

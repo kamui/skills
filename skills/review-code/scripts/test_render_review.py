@@ -12,8 +12,9 @@ comment's full body, every ledger row, the routed state, and each drafted reply 
 once. Every failure must leave no report and no consumable output, and a retry must
 restore the clean run's bytes. The prior-record fixtures cover each refusal of the
 one-hop check, a two-hop lineage with a carried confirmation, allowance carry, an
-exhausted allowance after a fixed ordinary must-fix, and a sibling fork that only the
-caller's lineage check can reject.
+exhausted allowance after a fixed ordinary must-fix, settled premises a delta review
+carries, a gap tied to no file that only a task or a check settles, and a sibling fork
+that only the caller's lineage check can reject.
 """
 from __future__ import annotations
 
@@ -1170,7 +1171,8 @@ class PriorRecord(unittest.TestCase):
                 else:
                     self.refused(result, f"drops `{colon}`")
         # An unrecoverable input names no item, so settling every item releases nothing.
-        missing = dict(status="Incomplete", coverage="incomplete", gaps=["the benchmark artifact was not supplied"])
+        missing = dict(status="Incomplete", coverage="incomplete",
+                       outstanding=[fixtures.pending_work("the benchmark artifact", "the supplied benchmark artifact")])
         r1 = self.accepted(self.directory(), 0, self.composition(
             findings=[self.consider()], routed={"unresolved": [], "disputed": [], "unrecoverable_inputs": ["the benchmark artifact"]}, **missing))
         result = self.finalize(self.directory(), 1, self.composition(status="Approved", prior_items=settled), r1)
@@ -1235,6 +1237,87 @@ class PriorRecord(unittest.TestCase):
         private = self.directory()
         holds = fixtures.premise_task(batch="follow-up")
         self.accepted(private, 1, delta(status="Approved", tasks=[holds], batches=[bundle(private, [holds], "follow-up", "follow-up")]), r1)
+
+    def delta(self, prior_index, **change):
+        value = self.composition(**change)
+        value["run"]["prior_head"] = self.heads[prior_index]
+        return value
+
+    def test_delta_review_carries_settled_premises_from_the_prior_record(self):
+        # R1 confirms a blocker and settles one premise; a second premise is still pending.
+        private = self.directory()
+        task, holds = fixtures.candidate_task(FINDING_ID), fixtures.premise_task()
+        pending = fixtures.premise_task("premise-2", batch=None, ruling="pending")
+        r1 = self.accepted(private, 0, self.composition(
+            findings=[self.must_fix()], tasks=[task, holds, pending], batches=[bundle(private, [task, holds])],
+            coverage="incomplete", outstanding=[fixtures.pending_work("premise-2", "an awaited verifier ruling")]))
+        body = json.loads(r1.read_text(encoding="utf-8"))["summary"]["body"]
+        self.assertIn(f"## Settled premises\n\n- `premise-1` (data-integrity) at `{self.heads[0]}` — {holds['premise']}\n", body)
+        self.assertNotIn("`premise-2` (", body)
+        carried = {"id": holds["id"], "area": holds["area"], "premise": holds["premise"], "head": self.heads[0]}
+        fixed = self.open_items("fixed")[:1]
+        # R2 reviews the delta, carries premise-1 unchallenged and settles premise-2 in its follow-up.
+        private = self.directory()
+        settles = fixtures.premise_task("premise-2", batch="follow-up")
+        value = self.delta(0, status="Approved", prior_items=fixed, tasks=[settles],
+                           batches=[bundle(private, [settles], "follow-up", "follow-up")])
+        value["record"]["verification"]["carried_premises"] = [carried]
+        r2 = self.accepted(private, 1, value, r1)
+        body = json.loads(r2.read_text(encoding="utf-8"))["summary"]["body"]
+        self.assertIn(f"- `premise-2` (data-integrity) at `{self.heads[1]}` — ", body)
+        self.assertIn(f"- `premise-1` (data-integrity) at `{self.heads[0]}` — ", body)
+        report = (r2.parent / "report.md").read_text(encoding="utf-8")
+        self.assertIn(f"- Carried premise `premise-1`, area `data-integrity`, settled at `{self.heads[0]}`: ", report)
+        # R3 carries both through R2, each with the head that settled it.
+        value = self.delta(1, status="Approved")
+        value["record"]["verification"]["carried_premises"] = [carried, dict(carried, id="premise-2", premise=settles["premise"],
+                                                                             head=self.heads[1])]
+        r3 = self.accepted(self.directory(), 2, value, r2)
+        checked = run([RENDER, "--check", "--head", self.heads[2], "--lineage", r1, "--lineage", r2, "--lineage", r3, r3.parent])
+        self.assertEqual(checked.returncode, 0, checked.stdout)
+        # A premise no earlier round settled cannot be carried: the pending one, an unknown one, or a changed copy.
+        for name, entry in (("pending in the prior", dict(carried, id="premise-2")),
+                            ("never challenged", dict(carried, id="premise-3")),
+                            ("another head", dict(carried, head=self.heads[1])),
+                            ("rewritten text", dict(carried, premise="The lookup may fail.")),
+                            ("another area", dict(carried, area="security"))):
+            with self.subTest(name):
+                value = self.delta(0, status="Incomplete", coverage="incomplete", prior_items=fixed,
+                                   outstanding=[fixtures.pending_work("premise-2", "an awaited verifier ruling")])
+                value["record"]["verification"]["carried_premises"] = [entry]
+                self.refused(self.finalize(self.directory(), 1, value, r1), "a premise no earlier round settled is challenged")
+        # A full re-review from the prior record challenges its premises again.
+        value = self.composition(status="Incomplete", coverage="incomplete", prior_items=fixed,
+                                 outstanding=[fixtures.pending_work("premise-2", "an awaited verifier ruling")])
+        value["record"]["verification"]["carried_premises"] = [carried]
+        self.refused(self.finalize(self.directory(), 1, value, r1), "only a delta review carries settled premises")
+
+    def test_a_gap_tied_to_no_file_carries_until_a_check_settles_it(self):
+        check = "python3 -m unittest ledger_test"
+        gap = {"id": check, "claim": "The ledger suite never ran at a reviewed head.",
+               "settled_by": "a run of the ledger suite at the reviewed head"}
+        # Incomplete coverage with every file reviewed and nothing outstanding names no gap the next round can see.
+        self.refused(self.finalize(self.directory(), 0, self.composition(status="Incomplete", coverage="incomplete",
+                                                                        gaps=["the ledger suite never ran"])),
+                     "goes in `outstanding`")
+        r1 = self.accepted(self.directory(), 0, self.composition(status="Incomplete", coverage="incomplete", outstanding=[gap]))
+        prior = json.loads(r1.read_text(encoding="utf-8"))
+        self.assertEqual((prior["run"]["files"], prior["run"]["verification"]), ("complete", "incomplete"))
+        self.assertIn(f"## Unfinished verification\n\n- `{check}` — {gap['claim']}", prior["summary"]["body"])
+        # The delta review after it reports the gap again, or approves only once a check at its head settles it.
+        self.accepted(self.directory(), 1, self.delta(0, status="Incomplete", coverage="incomplete", outstanding=[gap]), r1)
+        self.refused(self.finalize(self.directory(), 1, self.delta(0, status="Approved"), r1),
+                     f"drops `{check}`; outstanding work survives until a task in this run, or a check it records at its head")
+        for outcome, settles in (("reviewer-executed", True), ("failed", True), ("unavailable", False)):
+            with self.subTest(outcome):
+                value = self.delta(0, status="Approved")
+                value["record"]["check_evidence"] = [{"check": check, "head": self.heads[1], "outcome": outcome,
+                                                      "reason": "run once at the reviewed head"}]
+                result = self.finalize(self.directory(), 1, value, r1)
+                if settles:
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                else:
+                    self.refused(result, f"drops `{check}`")
 
     def test_prior_record_refusals(self):
         r1 = self.first()

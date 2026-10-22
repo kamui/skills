@@ -11,7 +11,8 @@ Usage:
 Finalization reads PRIVATE_DIR/composition.json: the judgments and prose the
 reviewer authored (`--example` prints a pull request's) with the private
 `record` accounting: `repository`, `requirements`, `files`, `check_evidence`,
-`verification` (`tasks`, `batches`, `outstanding`) and `routed`
+`verification` (`tasks`, `batches`, `outstanding`, and optionally
+`carried_premises`) and `routed`
 (`unresolved`, `disputed`, `unrecoverable_inputs`), each written, empty lists
 included. Nothing judged is defaulted. Mechanical fields an input owns may be
 omitted and are filled first; an explicit copy that disagrees is refused, and
@@ -50,7 +51,8 @@ with its action, in `prior_items`; render an open one (`still-open`,
 `not-verifiable`, `disputed`) again under its id, a must-fix staying must-fix,
 and a settled one (`fixed`, `accepted`, `obsolete`) never; keep every prior
 `outstanding` and `routed` entry unless a task this run ruled on settled it
-(a carried confirmation settles nothing), or the item a `routed.unresolved`
+(a carried confirmation settles nothing), an `outstanding` entry named by a
+check this run records at its head with a result, or the item a `routed.unresolved`
 or `routed.disputed` entry names is settled: classified `fixed`, `accepted`
 or `obsolete` here, or no longer open in the prior; record a batch only for
 a phase the prior left unspent; and name, for a carried confirmation,
@@ -59,13 +61,24 @@ accounting report confirmed it, which must be the provenance the prior's own
 task carries.
 `run.prior_head`, when a delta review sets it, is the prior's head, and the
 prior must leave no changed file `unreviewed`; its unfinished verification
-carries forward under the outstanding rule above. Without a prior record a
-local target has no prior items.
+carries forward under the outstanding rule above, and each
+`carried_premises` entry must be a premise the prior settled, with the same
+id, area, text and head. Without a prior record a local target has no prior
+items.
 
 `run.files` is `incomplete` exactly when a changed file is `unreviewed`, and
 `run.verification` exactly when `outstanding` lists an item (`id`, `claim`,
-`settled_by`); either one incomplete makes `run.coverage` incomplete. The
-summary publishes each outstanding item under `Unfinished verification`.
+`settled_by`); `run.coverage` is incomplete exactly when one of them is, so a
+gap tied to no file, such as a check that never ran, is an `outstanding`
+item. The summary publishes each outstanding item under `Unfinished
+verification`.
+
+A settled premise is a `holds` safety-premise task, settled at this head, or
+a `carried_premises` entry (`id`, `area`, `premise`, and the earlier `head`
+that settled it), which only a delta review records and no task here may
+share. The summary lists both under `Settled premises` for the next round.
+On a delta review an optional candidate task names the risk `area` the delta
+touches.
 
 Each prior item may add `reply` (drafted reply prose, or null), `thread_id`
 and `comment_id`: both null for an item without a forge thread, otherwise the
@@ -137,7 +150,7 @@ from build_verifier_prompt import MANIFEST_FORMAT
 
 # --- payload validation ----------------------------------------------------
 
-WORKFLOW = "v5b-34"
+WORKFLOW = "v5b-35"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -926,7 +939,10 @@ PREMISE_RULINGS = ("holds", "fails", "unresolved", "withheld", "pending")
 PHASES = ("initial", "follow-up")
 FILE_STATES = ("reviewed", "ignored", "unreviewed")
 OUTSTANDING_KEYS = ("id", "claim", "settled_by")
+CARRIED_PREMISE_KEYS = ("id", "area", "premise", "head")
+DELTA_AREAS = (*PREMISE_AREAS, "failover")
 EVIDENCE_OUTCOMES = ("accepted", "historical", "reviewer-executed", "pending", "failed", "unavailable")
+SETTLING_OUTCOMES = ("accepted", "reviewer-executed", "pending", "failed")  # a check with a result at the reviewed head
 BATCH_CAP = 2  # one initial plus one follow-up
 
 
@@ -1278,6 +1294,10 @@ def read_run(report: Report, run: Any) -> dict[str, Any] | None:
     for key in ("files", "verification"):
         if fields[key] == "incomplete" and fields["coverage"] == "complete":
             report.add("run.coverage", "coverage-gaps", f"`run.{key}=incomplete` contradicts `run.coverage=complete`")
+    if fields["coverage"] == "incomplete" and fields["files"] == fields["verification"] == "complete":
+        report.add("run.coverage", "coverage-gaps", "`run.coverage=incomplete` with every file reviewed and nothing outstanding; "
+                   "a gap tied to no file, such as a check that never ran, goes in `outstanding` so the next round settles "
+                   "or reports it")
     merged = run.get("merged")
     if not isinstance(merged, bool):
         report.add(
@@ -1338,14 +1358,9 @@ def read_summary(report: Report, summary: Any, run: dict[str, Any] | None) -> di
         report.add("summary.coverage_gaps", "schema", "`coverage_gaps` must be a list of one-line entries")
         gaps = []
     coverage = run["coverage"] if run else None
-    # Unfinished verification publishes as its own section, so it alone needs no gap line.
-    only_verification = run is not None and run["files"] == "complete" and run["verification"] == "incomplete"
-    if coverage == "incomplete" and not gaps and not only_verification:
-        report.add(
-            "summary.coverage_gaps",
-            "coverage-gaps",
-            "`run.coverage` is `incomplete`, so `coverage_gaps` must name each uncovered file, check, or connection",
-        )
+    # Every other gap is an `outstanding` item, which publishes as its own section.
+    if run is not None and run["files"] == "incomplete" and not gaps:
+        report.add("summary.coverage_gaps", "coverage-gaps", "`run.files` is `incomplete`, so `coverage_gaps` must name each unreviewed file")
     if coverage == "complete" and gaps:
         report.add("summary.coverage_gaps", "coverage-gaps", "`coverage_gaps` is non-empty, which contradicts `run.coverage=complete`")
     fields["coverage_gaps"] = gaps
@@ -1518,6 +1533,7 @@ def compose_body(
     observations: list[dict[str, Any]],
     priors: list[dict[str, Any]],
     outstanding: list[dict[str, str]],
+    premises: list[dict[str, str]],
     trailer: str,
 ) -> str:
     identity = {"head": run["head"], "merge_base": run["merge_base"], "repository_url": run["repository_url"]}
@@ -1613,6 +1629,9 @@ def compose_body(
     settled = [p for p in priors if p["classification"] in ("fixed", "accepted", "obsolete")]
     if settled:
         details.append("## Settled findings\n\n" + "\n".join(f"- `{p['id']}` — {p['classification']}: {p['note']}" for p in settled))
+    if premises:
+        details.append("## Settled premises\n\n" + "\n".join(
+            f"- `{p['id']}` ({p['area']}) at `{p['head']}` — {p['premise']}" for p in premises))
     if outstanding:
         paragraphs.append("## Unfinished verification\n\n" + "\n".join(
             f"- `{item['id']}` — {item['claim']} Settled by: {item['settled_by']}" for item in outstanding))
@@ -1784,8 +1803,21 @@ def load_prior(path: str) -> tuple[dict[str, Any] | None, list[str]]:
                         if isinstance(e, str) or isinstance(e, dict) and isinstance(e.get("id"), str)],
         "routed": {key: [e for e in routed.get(key) or [] if isinstance(e, str)] for key in ("unresolved", "disputed", "unrecoverable_inputs")},
         "tasks": {t["id"]: t for t in verification["tasks"] if isinstance(t, dict) and isinstance(t.get("id"), str)},
+        # A record finalized before workflow v5b-35 carries no premises.
+        "settled": {p["id"]: p for p in settled_premises(run.get("head"), verification["tasks"],
+                                                          verification.get("carried_premises") or [])},
         "batches": {b["name"]: b.get("accounting") for b in verification["batches"] if isinstance(b, dict) and isinstance(b.get("name"), str)},
     }, []
+
+
+def settled_premises(head: Any, tasks: list[Any], carried: Any) -> list[dict[str, Any]]:
+    """The premises a record settles: its `holds` premise tasks, at its head, then the ones it carried."""
+    settled = [{"id": t["id"], "area": t.get("area"), "premise": t.get("premise"), "head": head} for t in tasks
+               if isinstance(t, dict) and t.get("type") == "safety-premise" and t.get("ruling") == "holds"
+               and isinstance(t.get("id"), str)]
+    if isinstance(carried, list):
+        settled += [p for p in carried if isinstance(p, dict) and isinstance(p.get("id"), str)]
+    return settled
 
 
 def carried_accounting(prior: dict[str, Any], chain_record: str, batch: str) -> tuple[str | None, str]:
@@ -1852,7 +1884,8 @@ def check_carried(report: Report, location: str, task: dict[str, Any], prior: di
 
 
 def check_prior(report: Report, prior: dict[str, Any], run: dict[str, Any], record: Any, items: list[dict[str, Any]],
-                priors: list[tuple[str, dict[str, Any]]], tasks: list[dict[str, Any]], outstanding: list[str]) -> None:
+                priors: list[tuple[str, dict[str, Any]]], tasks: list[dict[str, Any]], outstanding: list[str],
+                checks: set[str], carried_premises: list[dict[str, str]]) -> None:
     """What a ``prior_record`` run keeps from its prior: identity, classified open items and surviving state."""
     if run["target_kind"] not in LOCAL:
         report.add("prior_record", "prior-record", "a prior record continues a local target; a pull request carries prior state from its packet")
@@ -1895,11 +1928,16 @@ def check_prior(report: Report, prior: dict[str, Any], run: dict[str, Any], reco
             report.add("prior_items", "prior-record", f"the prior record's open item `{identity}` is unclassified; classify "
                        "every open prior finding and question")
 
+    for premise in carried_premises:
+        if prior["settled"].get(premise["id"]) != premise:
+            report.add("record.verification.carried_premises", "prior-record", f"the prior record settled no premise "
+                       f"`{premise['id']}` with this area and text at `{premise['head']}`; a premise no earlier round settled "
+                       "is challenged before the review approves")
     settled = {task["id"] for task in tasks if task.get("ruling") not in ("pending", "withheld") and "confirmed_in" not in task}
     for entry in prior["outstanding"]:
-        if entry not in outstanding and entry not in settled:
+        if entry not in outstanding and entry not in settled and entry not in checks:
             report.add("record.verification.outstanding", "prior-record", f"drops `{entry}`; outstanding work survives until a "
-                       "task in this run settles it")
+                       "task in this run, or a check it records at its head, settles it")
     closed = {identity for identity, item in classified.items() if item["classification"] not in OPEN_CLASSIFICATIONS}
     routed = record.get("routed") if isinstance(record, dict) and isinstance(record.get("routed"), dict) else {}
     for key, entries in prior["routed"].items():
@@ -1923,8 +1961,30 @@ def read_outstanding(report: Report, where: str, value: Any) -> list[dict[str, s
     return [{key: row[key] for key in OUTSTANDING_KEYS} for _location, row in rows]
 
 
+def read_carried_premises(report: Report, where: str, value: Any, run: dict[str, Any],
+                          prior: dict[str, Any] | None) -> list[dict[str, str]]:
+    """Each premise an earlier round settled that this delta review carries without challenging it again."""
+    rows = read_rows(report, where, value, CARRIED_PREMISE_KEYS)
+    if rows and run.get("prior_head") is None:
+        report.add(where, "verification", "only a delta review carries settled premises; a full review challenges each "
+                   "premise its conclusion needs")
+    elif rows and run.get("target_kind") in LOCAL and prior is None:
+        report.add(where, "prior-record", "a local target carries settled premises only from a prior record")
+    for location, row in rows:
+        for key in row.keys() - set(CARRIED_PREMISE_KEYS):
+            report.add(location, "schema", f"unknown key `{key}`; a carried premise has {list(CARRIED_PREMISE_KEYS)}")
+        if row["area"] not in PREMISE_AREAS:
+            report.add(location, "verification", f"`area` must be one of {list(PREMISE_AREAS)}")
+        if not COMMIT_SHA_RE.match(row["head"]):
+            report.add(location, "trailer-sha", "`head` must be exactly 40 lowercase hexadecimal characters")
+        elif row["head"] == run.get("head"):
+            report.add(location, "verification", "a carried premise keeps the earlier head that settled it; a premise "
+                       "challenged at this head is a task")
+    return [{key: row[key] for key in CARRIED_PREMISE_KEYS} for _location, row in rows]
+
+
 def read_verification(
-    report: Report, verification: Any, state: Any, findings: list[dict[str, Any]], questions: list[dict[str, Any]],
+    report: Report, verification: Any, run: dict[str, Any], findings: list[dict[str, Any]], questions: list[dict[str, Any]],
     prior: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Check verification tasks, batches, allowance, and outstanding work for contradictions; see the docstring."""
@@ -1933,8 +1993,10 @@ def read_verification(
     if not isinstance(verification, dict):
         report.add(where, "schema", "`verification` must be an object with `tasks`, `batches`, `allowance`, and `outstanding`")
         verification = {}
+    state = run.get("verification")
     items = read_outstanding(report, f"{where}.outstanding", verification.get("outstanding", []))
     outstanding = [item["id"] for item in items]
+    carried_premises = read_carried_premises(report, f"{where}.carried_premises", verification.get("carried_premises", []), run, prior)
     if outstanding and state != "incomplete":
         report.add(f"{where}.outstanding", "coverage-gaps", "outstanding verification contradicts `run.verification=complete`; required work that did not finish never establishes safety")
     elif not outstanding and state == "incomplete":
@@ -1976,9 +2038,15 @@ def read_verification(
         if identity in by_id:
             report.add(location, "stable-id", f"task `{identity}` is listed twice; a task id names one task")
         by_id[identity] = task
+        if identity in {premise["id"] for premise in carried_premises}:
+            report.add(location, "verification", f"premise `{identity}` is both carried and challenged again; record it once")
         if task["type"] == "candidate":
             if task.get("trigger") not in TRIGGERS:
                 report.add(location, "verification", f"a candidate task's `trigger` must be one of {list(TRIGGERS)}")
+            area = task.get("area")
+            if (area is not None or task.get("trigger") == "optional" and run.get("prior_head") is not None) and area not in DELTA_AREAS:
+                report.add(location, "verification", "a delta review sends an optional candidate task only for a risk area the "
+                           f"delta touches, named in `area`: one of {list(DELTA_AREAS)}")
             if task["ruling"] not in CANDIDATE_RULINGS:
                 report.add(location, "verification", f"a candidate task's `ruling` must be one of {list(CANDIDATE_RULINGS)}")
             if (task["ruling"] == "unresolved" and task.get("trigger") != "optional"
@@ -2054,9 +2122,11 @@ def read_verification(
                        f"`{flag[phase]}` is true with no `{phase}` batch recorded here or spent by a prior record")
     if "follow-up" in phases and not ("initial" in phases or carried["initial_spent"]):
         report.add(f"{where}.batches", "verification", "a follow-up batch needs the initial batch spent first")
-    return {"tasks": [t for _w, t in tasks], "batches": [b for _w, b in batches],
-            "allowance": {"initial_spent": spent["initial"], "follow_up_spent": spent["follow-up"]},
-            "outstanding": items}
+    fields = {"tasks": [t for _w, t in tasks], "batches": [b for _w, b in batches],
+              "allowance": {"initial_spent": spent["initial"], "follow_up_spent": spent["follow-up"]}, "outstanding": items}
+    if "carried_premises" in verification:
+        fields["carried_premises"] = carried_premises
+    return fields
 
 
 def rendered_ids(findings: list[dict[str, Any]], questions: list[dict[str, Any]]) -> set[str]:
@@ -2138,7 +2208,7 @@ def read_record(
                 read_line(report, where, row, "reason")
     fields["check_evidence"] = [r for _w, r in evidence]
 
-    fields["verification"] = read_verification(report, record.get("verification"), run.get("verification"), findings, questions, prior)
+    fields["verification"] = read_verification(report, record.get("verification"), run, findings, questions, prior)
 
     routed = record.get("routed", {})
     if not isinstance(routed, dict):
@@ -2228,8 +2298,11 @@ def compose_record(composition: Any, store: dict[str, Any] | None = None, prior:
                              [p for _l, p in priors], store, prior)
     if prior is not None and run is not None:
         verification = (record or {}).get("verification") or {}
+        checks = {row["check"] for row in (record or {}).get("check_evidence", [])
+                  if row["head"] == run["head"] and row["outcome"] in SETTLING_OUTCOMES}
         check_prior(report, prior, run, composition.get("record"), [i for _l, i, _t in findings + questions], priors,
-                    verification.get("tasks", []), [item["id"] for item in verification.get("outstanding", [])])
+                    verification.get("tasks", []), [item["id"] for item in verification.get("outstanding", [])], checks,
+                    verification.get("carried_premises", []))
     if report.lines or run is None or summary is None:
         return None, {}, report.lines
 
@@ -2239,9 +2312,11 @@ def compose_record(composition: Any, store: dict[str, Any] | None = None, prior:
         f"supplied_inputs={run['supplied_inputs']} issues={run['issues']} files={run['files']} "
         f"verification={run['verification']} coverage={run['coverage']} -->"
     )
-    outstanding = ((record or {}).get("verification") or {}).get("outstanding", [])
+    verification = (record or {}).get("verification") or {}
     body = compose_body(report, run, summary, findings, questions, [o for _l, o in observations], [p for _l, p in priors],
-                        outstanding, trailer)
+                        verification.get("outstanding", []),
+                        settled_premises(run["head"], verification.get("tasks", []), verification.get("carried_premises", [])),
+                        trailer)
     if report.lines:
         return None, {}, report.lines
     payload: dict[str, Any] = {"summary": {"body": body, "trailer": trailer}, "items": []}
@@ -2687,6 +2762,8 @@ def ledger_sections(record: dict[str, Any], prior_record: str | None) -> list[st
             if task.get("reopened_as"):
                 line += f" Reopened as {code(task['reopened_as'])}."
             lines.append(line)
+    lines.extend(f"- Carried premise {code(p['id'])}, area `{p['area']}`, settled at `{p['head']}`: {p['premise']}"
+                 for p in verification.get("carried_premises", []))
     lines.extend(f"- Outstanding {code(item['id'])}: {item['claim']} Settled by: {item['settled_by']}" for item in verification["outstanding"])
     parts.append("## Verification\n\n" + "\n".join(lines))
 
