@@ -1329,4 +1329,4 @@ The entry below records the addition that #384's two inconclusive runs left unva
 
 ## Workflow versions
 
-To find the rules behind a version, search for the commit that set it. For example, `git log -S 'WORKFLOW = "v5b-32"' -- skills/review-code/scripts/render_review.py` finds the commit that introduced `v5b-32`, and its pull request names the issue. This repository's history starts at `v5b-30-x382-x415`. For earlier versions, read the workflow paragraph in `git show ad70b0b:README.md`, which lists each one with its issue.
+To find the rules behind a version, search for the commit that set it. For example, `git log --reverse -S 'WORKFLOW = "v5b-32"' -- skills/review-code/scripts/render_review.py` lists the commits that added or removed `v5b-32`, oldest first. The first one introduced it, and its pull request names the issue. This repository's history starts at `v5b-30-x382-x415`. For earlier versions, read the workflow paragraph in `git show ad70b0b:README.md`, which lists each one with its issue.
