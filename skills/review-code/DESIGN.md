@@ -25,7 +25,7 @@ Keep dated evidence and superseded decisions in the [history](../../docs/review-
 
 ## Current mechanics
 
-Workflow `v5b-32` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+Workflow `v5b-33` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
 
 **Compact presentation.** Workflow `v5b-28` changes rendering. The summary leads with outcome and findings; routine context, detailed checks, observations, and settled history collapse under `Review details`. Unresolved items and coverage gaps stay visible. Composition still requires a finding's trigger, impact, and change separately, but the renderer combines their prose and optional source without field labels. Payload validation checks for explanatory prose instead of reconstructing those fields from visible labels. Priority, action, hidden trailers, pinned coordinates, status, and publication events keep their meanings.
 
@@ -45,7 +45,7 @@ Workflow `v5b-32` versions admission, verification, rendering, and state semanti
 
 A verifier confirmed a candidate and returned `corrections.priority: "P4"`. Accounting withheld the whole record for that one optional field, the required task stayed unfinished, and the review ended `Incomplete`. `account_verifier_return.py` now drops an unknown or invalid correction field, or a `corrections` value that is not an object, from the report's retained return, records one violation naming it, and keeps the record accounted. The raw return file and its hash stay untouched. An invalid `id`, `verdict`, `basis`, `evidence`, `settling_fact` or safety ruling still withholds the record. A dropped correction still makes the report structurally incomplete and exits 1, which verification already treats as usable for the accounted records.
 
-`verifier.md` now lists the allowed `priority` and `action` values, adding 64 bytes to the verifier instructions and example brief. `verification.md` says the report's return omits dropped corrections, raising the required-verifier path from 46,754 to 46,786 bytes. The runtime total rises from 55,891 to 55,987 of its 56,000 limit. `verifier-accounting/3` keeps its shape, so prior records' reports still establish carried confirmations. Workflow advances to `v5b-32` because verification now accounts a ruling it used to withhold, so the duplicate shortcut does not reuse a review that ended `Incomplete` for this reason.
+`verifier.md` now lists the allowed `priority` and `action` values, and `verification.md` says the report's return omits dropped corrections. `verifier-accounting/3` keeps its shape, so prior records' reports still establish carried confirmations. Workflow advances to `v5b-33` because verification now accounts a ruling it used to withhold, so the duplicate shortcut does not reuse a review that ended `Incomplete` for this reason.
 
 ## Exact-head CI replaces local reruns, issue #449, 2026-10-22
 
