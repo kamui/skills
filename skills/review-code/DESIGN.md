@@ -47,6 +47,18 @@ A delta review needed the earlier review's `coverage` complete, and `coverage` t
 
 A delta review now needs only `files` complete, with the other delta conditions unchanged. Each `outstanding` item becomes an object of `id`, `claim` and `settled_by`, and the summary publishes it under `Unfinished verification`, so a later pull-request review can carry or settle it; a local `prior_record` run already keeps every outstanding entry until a task this run rules on settles it. The finalizer refuses a delta from a prior with an `unreviewed` file, a `files` or `verification` fact the record contradicts, and an outstanding entry in the old `<id>: <reason>` form. A prior record from before `v5b-33` still loads: its string entries keep their ids and its file rows give its `files` fact. Unfinished verification needs no coverage-gap line of its own. This supersedes #92's coverage condition on delta scope and the part of #331's outstanding-work handling that wrote unfinished verification only as coverage gaps. The verifier allowance, the required checks and which earlier must-fix findings need the verifier are unchanged. The trailer gains two keys, so the workflow advances to `v5b-33`.
 
+## The installed skill root, issue #456, 2026-10-22
+
+`record.paths.skill_root` named the symlink target of an installed skill, such as a synced folder on another drive. Publishers run `--check` and `--emit-batch` from the root the record names, and a harness safety check can refuse to run scripts from the target while it allows the installed path. The finalizer now records the path it was invoked through and doesn't resolve symlinks. It still accepts an explicit `skill_root` that names either path to the same directory. The record format, payload and batch don't change, so the workflow version stays the same.
+
+## Invalid corrections keep their verdict, issue #452, 2026-10-22
+
+A verifier confirmed a candidate but returned `corrections.priority: "P4"`. Accounting withheld the whole record because of that one optional field. The required task stayed unfinished, and the review ended `Incomplete`.
+
+`account_verifier_return.py` now drops an unknown or invalid correction field from the report's copy of the return and keeps the record accounted. If `corrections` is not an object, it drops the whole value. Each drop adds one violation that names what it dropped. The raw return file and its hash don't change. An invalid `id`, `verdict`, `basis`, `evidence`, `settling_fact` or safety ruling still withholds the record. Because a drop is a violation, the helper exits 1, and verification already uses an exit-1 report for its accounted records.
+
+`verifier.md` now lists the allowed `priority` and `action` values. `verification.md` says the report's copy of the return leaves out dropped corrections. `verifier-accounting/3` keeps its shape, so reports in prior records still establish carried confirmations. Verification now accounts a verdict it used to withhold, so the workflow advances to `v5b-33`. That stops the duplicate shortcut from reusing a review that ended `Incomplete` for this reason.
+
 ## Exact-head CI replaces local reruns, issue #449, 2026-10-22
 
 In the slowest sampled re-review, 46 of 81 minutes went to rerunning suites that CI had already passed at the same head. The caller's brief asked for the reruns, and the rubric had no rule for a CI job that was still running.

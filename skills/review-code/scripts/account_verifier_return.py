@@ -19,7 +19,9 @@ Exit 0: structurally complete, not confirmed; 1: content violations, one per
 stdout line, with an accounting report partitioning each role; 2: unreadable
 input or unwritable output, named on stderr. The raw return stays untouched;
 judgments, corrections, safety rulings and asides are retained verbatim as JSON
-values in the report, including on exit 1. No evidence or verdict is invented.
+values in the report, including on exit 1, except that an invalid correction field
+is dropped and named as a violation while its record's verdict stands. No evidence
+or verdict is invented.
 A task is accounted only by exactly one record in its own role that cites at
 least one raw location, or, for an unresolved result, names its settling fact;
 a missing, duplicated, foreign, or unusable record leaves the task withheld.
@@ -80,19 +82,30 @@ def verdict(record, kind, where):
         string(record["settling_fact"], where + ".settling_fact")
     if "safety_rulings" in record:
         safety(record["safety_rulings"], where + ".safety_rulings")
-    if "corrections" in record:
-        corrections = record["corrections"]
-        exact_keys(corrections, (), ("trigger", "impact", "priority", "action", "anchor", "fix", "change"), where + ".corrections")
-        for name, value in corrections.items():
-            loc = where + ".corrections." + name
-            if name == "anchor":
-                anchor(value, loc)
-            elif name == "priority":
-                choice(value, {"P0", "P1", "P2", "P3"}, loc)
-            elif name == "action":
-                choice(value, {"must-fix", "consider"}, loc)
-            else:
-                string(value, loc)
+    return corrections(record, where) if "corrections" in record else []
+
+
+CORRECTIONS = {"trigger": string, "impact": string, "fix": string, "change": string, "anchor": anchor,
+               "priority": lambda value, where: choice(value, {"P0", "P1", "P2", "P3"}, where),
+               "action": lambda value, where: choice(value, {"must-fix", "consider"}, where)}
+
+
+def corrections(record, where):
+    """Drop each invalid correction field from the retained record and return its violations; the verdict stands."""
+    where += ".corrections"
+    value = record["corrections"]
+    if not isinstance(value, dict):
+        del record["corrections"]
+        return [f"{where}: expected object; dropped, verdict kept"]
+    dropped = []
+    for name in list(value):
+        try:
+            require(name in CORRECTIONS, where, f"unknown field {name}")
+            CORRECTIONS[name](value[name], where + "." + name)
+        except ContentError as error:
+            del value[name]
+            dropped.append(f"{error}; dropped, verdict kept")
+    return dropped
 
 
 def ruling(record, where):
@@ -147,7 +160,7 @@ def account(data, manifest, manifest_hash, returned):
                 key = string(obj(record, loc).get("id"), loc + ".id")
                 require(key in items, loc, f"unknown or wrong-role ID {key}")
                 if role == "candidates":
-                    verdict(record, items[key]["kind"], loc)
+                    errors.extend(verdict(record, items[key]["kind"], loc))
                 else:
                     ruling(record, loc)
                 if counts[key] == 1:

@@ -26,7 +26,7 @@ The verifier writes its return to the bundle's new `return.json` and replies wit
 python3 scripts/account_verifier_return.py --bundle <private-dir>/initial --output <private-dir>/initial/accounting.json <return>
 ```
 
-The report splits each role's ids into `accounted` and `withheld` and holds the full return. Exit 0 means the return is structurally complete, nothing more. Exit 1 leaves a report you can still use for the accounted records while the rest stay withheld. A return carrying another bundle's id answers a different brief and withholds everything. A `<return>` that is not the assigned regular file is refused without a report: its tasks stay `withheld`, and a failed handoff never earns another batch.
+The report splits each role's ids into `accounted` and `withheld` and holds the return without any dropped correction field. Exit 0 means the return is structurally complete, nothing more. Exit 1 leaves a report you can still use for the accounted records while the rest stay withheld. A return carrying another bundle's id answers a different brief and withholds everything. A `<return>` that is not the assigned regular file is refused without a report: its tasks stay `withheld`, and a failed handoff never earns another batch.
 
 When only the encoding is broken, such as a Markdown fence around the JSON, write a separate repaired file that preserves every judgment and account it with `--repair-of <original>`. A repair never invents a verdict, evidence, or ruling, and never earns another batch.
 
