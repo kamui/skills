@@ -41,6 +41,10 @@ Workflow `v5b-33` versions admission, verification, rendering, and state semanti
 
 **Open risks.** [#347's measurement](../../docs/research/review-code-artifact-savings-2026-09-22/combined.md) found no overall cost or latency saving, more finalizer repairs under the stricter preconditions, verifier returns still inline under Claude Code, and primaries still opening worker-only references. Epic #355 removes machinery instead of automating it further. Rewriting a finalized record in place after a later record names it in its lineage is unsupported; nothing guards it now that no addenda directory exists.
 
+## The installed skill root, issue #456, 2026-10-22
+
+`record.paths.skill_root` named the symlink target of an installed skill, such as a synced folder on another drive. Publishers run `--check` and `--emit-batch` from the root the record names, and a harness safety check can refuse to run scripts from the target while it allows the installed path. The finalizer now records the path it was invoked through and doesn't resolve symlinks. It still accepts an explicit `skill_root` that names either path to the same directory. The record format, payload and batch don't change, so the workflow version stays the same.
+
 ## Invalid corrections keep their verdict, issue #452, 2026-10-22
 
 A verifier confirmed a candidate but returned `corrections.priority: "P4"`. Accounting withheld the whole record because of that one optional field. The required task stayed unfinished, and the review ended `Incomplete`.
