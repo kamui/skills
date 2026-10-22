@@ -16,7 +16,7 @@ bundle's tools and fixtures migrate here, as §8 describes.
 
 ## 1. Why
 
-The benchmark needs a rerun whenever a new model ships, whenever Claude Code or Codex change their
+The benchmark will be rerun whenever a new model ships, whenever Claude Code or Codex change their
 built-in reviewers, and whenever `review-code` changes. The current layout cannot support that.
 The mechanism, the truth, and one experiment's narrative sit in a dated research bundle. Target
 definitions are shell fragments quoted in prose. Registers are markdown. Packets and mirrors live
@@ -65,7 +65,7 @@ from the computed merge-base. `base_ref_name` is the upstream name, for example 
 `local_base_branch` is always `main`, per §6. `negative_shas` lists the excluded SHAs with the
 reason for each exclusion. The file also holds `cutoff`, `diff_manifest_sha256`, and
 `packet_sha256`. `diff_manifest_sha256` covers the changed-file list with per-file blob hashes, so
-a rebuilt mirror can be checked against the frozen diff identity. The file records `shape`,
+a rebuilt mirror is checked against the frozen diff identity. The file records `shape`,
 `domain`, and `language`, and also `merged_at`, `fix_published_at`, and `originating_issue`.
 `provisioning` holds the recipe, the resolved dependency identities such as lockfile hashes and
 cache archive hashes, the toolchain and platform record, the focused-command allowance, and what is
@@ -132,7 +132,7 @@ adjudicator configuration. `items[]` is keyed by stable item ID. Each item has `
 `defect:<id>`, `false-finding`, `non-material`, or `unresolved`. `fix_sufficiency` applies to
 recoveries and is `sufficient`, `partial`, `absent`, or `n/a`. `review_level` holds
 `native_verdict`, `approved_on_buggy`, `zero_recovery`, `false_clean`, and `completion`.
-Everywhere in these files, unavailable is distinct from zero.
+Unavailable is distinct from zero everywhere.
 
 **`results.v<M>.json`.** For each `(target, arm)`, the file reports the attempts included, the
 cells unattempted, the cells that were harness-invalid, and the replacements used. It reports

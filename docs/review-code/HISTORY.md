@@ -1333,7 +1333,7 @@ To find the rules behind a version, search for the commit that set it. For examp
 
 # Dated design notes moved from DESIGN.md (issue #463)
 
-`DESIGN.md` kept these dated sections until #463 reduced it to the current design again. They are unchanged and keep the order they had there, newest first.
+`DESIGN.md` kept these dated sections until #463 reduced it to the current design again. They are unchanged and keep the order they had there.
 
 ## Delta re-reviews challenge only what the delta affects, issue #450, 2026-10-22
 
