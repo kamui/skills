@@ -1118,8 +1118,7 @@ class PriorRecord(unittest.TestCase):
         private = self.directory()
         self.accepted(private, 1, self.composition(
             status="Incomplete", tasks=[pending], prior_items=self.open_items("fixed"), coverage="incomplete",
-            outstanding=[fixtures.pending_work("ledger/negative-balance", "must-fix candidate arrived after the follow-up was spent")],
-            gaps=["`ledger/negative-balance` needs confirmation the spent allowance cannot give"]), r1)
+            outstanding=[fixtures.pending_work("ledger/negative-balance", "must-fix candidate arrived after the follow-up was spent")]), r1)
 
     def test_required_unresolved_verification_leaves_it_incomplete(self):
         private = self.directory()
@@ -1127,13 +1126,12 @@ class PriorRecord(unittest.TestCase):
         pending = fixtures.premise_task(batch=None, ruling="pending")
         r1 = self.accepted(private, 0, self.composition(
             findings=[self.must_fix()], tasks=[task, pending], batches=[bundle(private, [task])], coverage="incomplete",
-            outstanding=[fixtures.pending_work("premise-1", "no awaited route")], gaps=["premise-1 unverified"]))
+            outstanding=[fixtures.pending_work("premise-1", "no awaited route")]))
         # The fix settles the finding, but the outstanding premise survives: complete coverage is refused.
         result = self.finalize(self.directory(), 1, self.composition(status="Approved", prior_items=self.open_items("fixed")[:1]), r1)
         self.refused(result, "drops `premise-1`")
         self.accepted(self.directory(), 1, self.composition(
-            status="Incomplete", prior_items=self.open_items("fixed")[:1], coverage="incomplete", outstanding=[fixtures.pending_work("premise-1", "no awaited route")],
-            gaps=["premise-1 unverified"]), r1)
+            status="Incomplete", prior_items=self.open_items("fixed")[:1], coverage="incomplete", outstanding=[fixtures.pending_work("premise-1", "no awaited route")]), r1)
         # A task here that settles it lets it go.
         private = self.directory()
         holds = fixtures.premise_task(batch="follow-up")
