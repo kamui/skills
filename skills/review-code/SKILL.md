@@ -61,7 +61,7 @@ Allow one initial batch and at most one follow-up, shared with runs continuing a
 
 ## Status
 
-Coverage is complete when every changed file is reviewed or defensibly ignored and required inputs, checks, and verification are accounted for. Each gap names the missing evidence, what it could change, affected candidate ids, and the recovery request.
+Record two facts: `files` is complete when every changed file is reviewed or defensibly ignored, and `verification` when no required verification is outstanding. Coverage is complete when both are and required inputs and checks are accounted for. Each gap names the missing evidence, what it could change, affected candidate ids, and the recovery request.
 
 Choose the first applicable status:
 
