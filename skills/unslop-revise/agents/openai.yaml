@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unslop and Revise"
+  short_description: "Unslop text, then fix wrong or ambiguous statements"
+  default_prompt: "Use $unslop-revise to unslop this text and fix any wrong or ambiguous statements."
