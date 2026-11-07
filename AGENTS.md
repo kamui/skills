@@ -24,7 +24,7 @@ Use the single-context layout: `GLOSSARY.md` at the repo root and `docs/adr/`. S
 
 ### Runtime review dependency
 
-`review-code-publish` and `implement-publish` require `review-code`; each stops with a named report when it is absent. `finish-it` requires `implement-publish`, `review-code-publish`, `resolve-review`, and `review-code`, and stops with `missing-dependency: <name>` before any write. These are the two named exceptions to installing skills alone. `review-bot` is optional for `review-code-publish` and `finish-it`; its absence is a recorded fallback to the authenticated user with gating withheld, never a stop or a third install-alone exception.
+`review-code-publish` and `implement-publish` require `review-code`; each stops with a named report when it is absent. `finish-it` requires `implement-publish`, `review-code-publish`, `resolve-review`, and `review-code`, and stops with `missing-dependency: <name>` before any write. `unslop-revise` requires `unslop` from `michael-denyer/pstack-claude` and stops with `missing-dependency: unslop` when it is absent. These are the three named exceptions to installing skills alone. `review-bot` is optional for `review-code-publish` and `finish-it`; its absence is a recorded fallback to the authenticated user with gating withheld, never a stop or another install-alone exception.
 
 ### Design docs
 

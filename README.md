@@ -19,6 +19,7 @@ npx skills@latest add kamui/skills --skill implement-publish --skill review-code
 npx skills@latest add kamui/skills --skill finish-it --skill implement-publish --skill review-code-publish --skill resolve-review --skill review-code
 npx skills@latest add kamui/skills --skill review-bot          # optional: publish reviews as a GitHub App
 npx skills@latest add kamui/skills --skill find-medical-specialist
+npx skills@latest add kamui/skills --skill unslop-revise && npx skills@latest add michael-denyer/pstack-claude --skill unslop
 ```
 
 Use `review-code-publish` for routine pull-request reviews.
@@ -149,6 +150,14 @@ Supply the specialty, search area, appointment deadline or time horizon, and exa
 
 ```text
 $find-medical-specialist
+```
+
+### `unslop-revise`
+
+Runs `unslop` on the given text, then revises the result: it fixes wrong statements, rewrites ambiguous ones, and cuts claims the original doesn't support. It returns only the revised text. It requires `unslop` from [`michael-denyer/pstack-claude`](https://github.com/michael-denyer/pstack-claude) and stops with `missing-dependency: unslop` when it is absent.
+
+```text
+$unslop-revise
 ```
 
 ## Reviewing as a GitHub App
