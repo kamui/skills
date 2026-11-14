@@ -20,11 +20,12 @@ npx skills@latest add kamui/skills --skill finish-it --skill implement-publish -
 npx skills@latest add kamui/skills --skill review-bot          # optional: publish reviews as a GitHub App
 npx skills@latest add kamui/skills --skill find-medical-specialist
 npx skills@latest add kamui/skills --skill unslop-revise && npx skills@latest add michael-denyer/pstack-claude --skill unslop
+npx skills@latest add kamui/skills --skill design-loop
 ```
 
 Use `review-code-publish` for routine pull-request reviews.
 
-Skill names start with the verb for what the skill does and end in `-publish` when the skill writes to the forge, which leaves `/code-review` to the harness and to skills installed from other sources. Issue #245 standardized the publishing skill names and renamed `code-review-address` to `resolve-review`. `finish-it` orchestrates the three publishing skills rather than publishing anything of its own, and is invoked as the phrase a person says, so it carries no `-publish` suffix. See `CHANGELOG.md` to migrate an existing install.
+Skill names start with the verb for what the skill does and end in `-publish` when the skill writes to the forge, which leaves `/code-review` to the harness and to skills installed from other sources. Issue #245 standardized the publishing skill names and renamed `code-review-address` to `resolve-review`. `finish-it` orchestrates the three publishing skills rather than publishing anything of its own, and is invoked as the phrase a person says, so it carries no `-publish` suffix. `design-loop` is the one exception to the verb rule: it is named for the loop it runs. See `CHANGELOG.md` to migrate an existing install.
 
 The installer asks which supported agents and installation scope to use.
 
@@ -158,6 +159,16 @@ Runs `unslop` on the given text, then revises the result: it fixes wrong stateme
 
 ```text
 $unslop-revise
+```
+
+### `design-loop`
+
+Improves a site's UI/UX in batches until a council of blind judge agents each score it at or above a threshold on a fixed eight-category rubric. The judges are gated in order, so a later judge is asked only after the earlier ones pass the same version, and a failure at any judge restarts from the first. Each grading round uses a fresh agent that sees the same brief and none of the scores, reports, or fixes from earlier rounds. The threshold defaults to 9.0 in every category. Every batch lands on one branch and one pull request, and it never merges without the user's approval.
+
+The host agent needs a headless browser the judges can drive and access to the forge to open the pull request.
+
+```text
+$design-loop
 ```
 
 ## Reviewing as a GitHub App

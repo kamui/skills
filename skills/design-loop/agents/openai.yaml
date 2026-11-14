@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Loop"
+  short_description: "Improve a site's UI/UX until blind judges all pass it"
+  default_prompt: "Use $design-loop to improve this site's UI/UX until every council judge scores every category at or above the threshold."
