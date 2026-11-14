@@ -10,7 +10,7 @@
     "launcher_path": "/Users/jack/.local/bin/claude",
     "launcher_sha256": "c942e1228b93cb4d52183b3dfbc77f28264f35aa947acd9c0853d029164cf450",
     "help_sha256": "ae85d661e9c086f05637ebcd868f5702b477ff6e55e2e65b8ada7807cd51a4b6",
-    "versions_capture_sha256": "a06d7fb5ebbd011bc908687c66959917cba5ca62c0d6b5a88a699a90b4d4b124",
+    "versions_capture_sha256": "ee4d00ccd0a8c96c46bd58b7079ddddc65071d894f65f485d4a61f657c5adb1f",
     "entrypoint_of_this_coordinator": "sdk-ts"
   },
   "host": {
