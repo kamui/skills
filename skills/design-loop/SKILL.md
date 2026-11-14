@@ -14,7 +14,7 @@ Take these from the user's request. Use the default when one is missing, and sta
 | Input | Default |
 |---|---|
 | Site and focus areas | the project's dev server; charts, tabs and dropdowns first |
-| Threshold | 9.0 in every category |
+| Threshold | 8.0 in every category |
 | Council, in gate order | Opus 5.5 high, then GLM 5.3 Flash high (via Pi, full access), then Fable 5.2 high |
 | Reference sites | ask once for two public sites of the same kind; skip if the user has none |
 | Merge policy | never merge without the user's approval |
