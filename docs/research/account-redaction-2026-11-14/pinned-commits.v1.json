@@ -1,0 +1,594 @@
+{
+  "schema_version": 1,
+  "repository": "kamui/skills",
+  "redaction_record": "https://github.com/kamui/skills/tree/main/docs/research/account-redaction-2026-11-14",
+  "about": "kamui/skills was re-created from a redacted history on the day of the cut. Commit ids changed; tree ids of the skills did not. Each earlier commit id that the benchmark cites maps to the new id below, kept reachable by a tag because pull request refs did not carry over.",
+  "benchmark_revision_read": "7c4d1be46a39d8b49533a73da7b914a0465e4d25",
+  "commits": [
+    {
+      "old": "02005197f6b4df4d6a1471d548ca9f00d69112e9",
+      "new": "382c0e7ba7ad1190a901abcbd8cd3885fa4ddb4a",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "0384e39bece003f9244793398491b477c27985a3",
+      "new": "b283a974177d5493c30aec6ff2561afe0964a4c2",
+      "reachable_from": [
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-26-x381-action/manifest.json:$.deviations[].what",
+        "bench/runs/2026-09-26-x384-lifecycle/manifest.json:$.deviations[].what",
+        "bench/runs/2026-09-26-x385-remedy-completeness/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "216e50710b7df769e0e2b0323d4dfa15da8c6574",
+      "new": "3deded491775f53ce2b7bc7990dff2eb7bd890a8",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "28b6c9002c4e986525ce402df9a262c51e641581",
+      "new": "aac79a26d3ab411467518fffc7acbd034a412363",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "2da77b4668fae5150eb37142959b8b5c3ad138c7",
+      "new": "d0fd0ba2dd4634409af8cf99eaa3a27854fe2992",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "339356370942429075935b2c2507dbd88d3ea984",
+      "new": "fe1de8d88037fb76f52620a64239cc82269db56f",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.freeze_commit"
+      ]
+    },
+    {
+      "old": "33b0c25e694cc2f276ed39347198a6178c5a0752",
+      "new": "fb90807023efadab5943a3c3160e20fd74e1a1ea",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "33c78ced23988a540ced1786e0e2a97d20448831",
+      "new": "66bfebc043d76c2813040d2523dcd2ea5425c388",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what",
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.metric_code_revision"
+      ]
+    },
+    {
+      "old": "35ff67517d5174abbc8ee2552dbdb5bbbedd8d78",
+      "new": "65471602cdfe00825f738c81229d33969adc72d0",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "367229249b0deccd789d043c910e591356a64d5a",
+      "new": "fafed919f649252cb56c337217ac99c0784c527d",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "390167b0fb37380a83718228dd825cef9e8ccedb",
+      "new": "a9a92a7bb1264ac300cb9d9ae036cf2b02cae988",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-toy/manifest.json:$.metric_code_revision"
+      ]
+    },
+    {
+      "old": "4a4f5f149e373e31878b7ad72011cc01646616fd",
+      "new": "42e31b0f96ed7ad5a88de275b35edac24ab63fc9",
+      "reachable_from": [
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-28-verification-off-staged/manifest.json:$.freeze_commit",
+        "bench/runs/2026-09-28-verification-off-staged/manifest.json:$.metric_code_revision"
+      ]
+    },
+    {
+      "old": "4b5a15daa81b114575e064b53a8b5d32fb3f2bf7",
+      "new": "fe604e9a975a5991d637a516bc4d50c2a8e5a36c",
+      "reachable_from": [
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-28-sonnet-5-5-rebench/manifest.json:$.metric_code_revision",
+        "bench/runs/2026-09-29-codex-builtin/manifest.json:$.metric_code_revision"
+      ]
+    },
+    {
+      "old": "503aba4933483b0c3db9f23ad60a696cbba029fa",
+      "new": "5c16c839a6507a424af0b3e1cf5fd576bb24eebe",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "53950685d342929c93ac67c17372aedc199f722c",
+      "new": "0a879765627db9149e928edd016ad245b15935be",
+      "reachable_from": [
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-26-x381-action/manifest.json:$.deviations[].what",
+        "bench/runs/2026-09-26-x384-lifecycle/manifest.json:$.deviations[].what",
+        "bench/runs/2026-09-26-x385-remedy-completeness/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "552a6f827dae7dc05ec8a951941f49437faf11fe",
+      "new": "79b3f590c1c6705d7156434341b4e77766aa5967",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "5714112489d9e48e5e0d0e2c3c2e535d0a7da970",
+      "new": "7550b8673dc11694512cf57ad27036426fa0c4c8",
+      "reachable_from": [
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-26-x383-consumer-comparison/manifest.json:$.freeze_commit"
+      ]
+    },
+    {
+      "old": "645607ee460db2e2f03ab38069cdfd3f5300e992",
+      "new": "912ea972bd00d1635dfc1cd10b72eb8ed6e2ddc5",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "66838d13eab0fb8999a53461c72bc643750173c2",
+      "new": "bde714f4c579784a281af6069956a63fe7ac3f45",
+      "reachable_from": [
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-26-x381-action/manifest.json:$.freeze_commit",
+        "bench/runs/2026-09-26-x384-lifecycle/manifest.json:$.freeze_commit",
+        "bench/runs/2026-09-26-x385-remedy-completeness/manifest.json:$.freeze_commit"
+      ]
+    },
+    {
+      "old": "6f61765dbfd07d70539ffea90779f671be0af5f4",
+      "new": "abc818dd21e42a4ed0cba90e10d475943c6eeecf",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "744b32d16742d23a45a68629fb54e90b2b9ba940",
+      "new": "26be450a181e4389d75e1588c5a9cc54dccd8025",
+      "reachable_from": [
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-28-unseen-target-comparison/manifest.json:$.freeze_commit"
+      ]
+    },
+    {
+      "old": "7d763a876370dbc8c3381dcdbf3cfaf2224bc380",
+      "new": "35f2993d075ae27ab94378c8cd7279adedf4e681",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "7e9d2f185b05a8602dc820cbbe080c7a98edc6f7",
+      "new": "b1a108343ac0df14e0f9a3533b46f58a51a1053e",
+      "reachable_from": [
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-26-x381-action/manifest.json:$.metric_code_revision",
+        "bench/runs/2026-09-26-x384-lifecycle/manifest.json:$.metric_code_revision",
+        "bench/runs/2026-09-26-x385-remedy-completeness/manifest.json:$.metric_code_revision"
+      ]
+    },
+    {
+      "old": "8073b48c57dcec598ddb30e076c30bcc8d41d2b0",
+      "new": "da8130a656d3e88adb0aa78bf1f6bd2ace5ba5b4",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-26-x382-destroyed-tests/manifest.json:$.metric_code_revision",
+        "bench/runs/2026-09-26-x383-consumer-comparison/manifest.json:$.metric_code_revision"
+      ]
+    },
+    {
+      "old": "9076ab8bc2b5c5c9db58bd867027f8317a987caa",
+      "new": "b81f8d36227c1e34e5242700e609778443a8cdb0",
+      "reachable_from": [
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-27-x384-matched-isolation/manifest.json:$.freeze_commit",
+        "bench/runs/2026-09-27-x384-matched-isolation/manifest.json:$.metric_code_revision"
+      ]
+    },
+    {
+      "old": "9eb2a23635200966daf98f28f26a23d5621de6ff",
+      "new": "7367a2f6cc6132ca98d391ca598541499a590305",
+      "reachable_from": [
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-28-unseen-target-comparison/manifest.json:$.metric_code_revision"
+      ]
+    },
+    {
+      "old": "a49dd79d82b58267de4fa9a83e60f3e6a4aa68e2",
+      "new": "ebd267d77292d7793b1c3f3a7cdbe2b31e926788",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "a5ac16fac7d3c9da3a84373e1f6de0b6a02225f5",
+      "new": "95b5dfcad6daeab58f6e2d823a895774f88bddd1",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "b11bb6c2afa9ddf8a0794b2f5b1349d8ce17566a",
+      "new": "766c8422c81efdfe765f7aa7162f4662a31f0eb6",
+      "reachable_from": [
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-27-x384-staged-gate/manifest.json:$.freeze_commit",
+        "bench/runs/2026-09-27-x384-staged-gate/manifest.json:$.metric_code_revision"
+      ]
+    },
+    {
+      "old": "bf3c25f5700cad316e8e091b01b868887361c205",
+      "new": "6c68d98e1a45c5f7b7722b84b251afaecd5ed232",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.method_revision",
+        "bench/runs/2026-09-24-toy/manifest.json:$.method_revision",
+        "bench/runs/2026-09-26-x381-action/manifest.json:$.method_revision",
+        "bench/runs/2026-09-26-x382-destroyed-tests/manifest.json:$.method_revision",
+        "bench/runs/2026-09-26-x383-consumer-comparison/manifest.json:$.method_revision",
+        "bench/runs/2026-09-26-x384-lifecycle/manifest.json:$.method_revision",
+        "bench/runs/2026-09-26-x385-remedy-completeness/manifest.json:$.method_revision",
+        "bench/runs/2026-09-27-x384-matched-isolation/manifest.json:$.method_revision",
+        "bench/runs/2026-09-27-x384-staged-gate/manifest.json:$.method_revision",
+        "bench/runs/2026-09-27-x394-staged-guardrail/manifest.json:$.method_revision",
+        "bench/runs/2026-09-28-sonnet-5-5-rebench/manifest.json:$.method_revision",
+        "bench/runs/2026-09-28-unseen-target-comparison/manifest.json:$.method_revision",
+        "bench/runs/2026-09-28-verification-off-staged/manifest.json:$.method_revision",
+        "bench/runs/2026-09-29-codex-astra-high-clean/manifest.json:$.method_revision",
+        "bench/runs/2026-09-29-codex-astra-high-writable/manifest.json:$.method_revision",
+        "bench/runs/2026-09-29-codex-builtin/manifest.json:$.method_revision",
+        "bench/runs/2026-09-29-codex-luna-high-writable/manifest.json:$.method_revision",
+        "bench/runs/2026-09-29-codex-sol-high-writable/manifest.json:$.method_revision",
+        "bench/runs/2026-09-29-codex-sol-high/manifest.json:$.method_revision",
+        "bench/runs/2026-09-29-codex-sol61-high-clean/manifest.json:$.method_revision",
+        "bench/runs/2026-09-30-selected-prs-review-only/manifest.json:$.method_revision",
+        "bench/runs/2026-10-08-last-push-claude-opus/manifest.json:$.method_revision",
+        "bench/runs/2026-10-08-last-push-claude-sonnet/manifest.json:$.method_revision",
+        "bench/runs/2026-10-08-last-push-codex-astra/manifest.json:$.method_revision",
+        "bench/runs/2026-10-08-last-push-codex-luna/manifest.json:$.method_revision",
+        "bench/runs/2026-10-08-last-push-codex-sol61/manifest.json:$.method_revision",
+        "bench/runs/2026-10-12-last-push-claude-review-code-sonnet/manifest.json:$.method_revision",
+        "bench/runs/2026-11-13-codex-builtin-terra61-high-matched/manifest.json:$.method_revision",
+        "bench/runs/2026-11-13-codex-builtin-terra61-high/manifest.json:$.method_revision"
+      ]
+    },
+    {
+      "old": "d460e84a85cfdf5d17a413d1cdceb6ca073ed043",
+      "new": "5498c0086243d9795babd3fd1a18319d284c9e37",
+      "reachable_from": [
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-28-sonnet-5-5-rebench/manifest.json:$.freeze_commit",
+        "bench/runs/2026-10-12-last-push-claude-review-code-sonnet/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "e2ab0a965d6b28d561a3dd95db6873482e4bb185",
+      "new": "4074192503765468a64051d5b5900a9594f4abc3",
+      "reachable_from": [
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-26-x381-action/manifest.json:$.deviations[].what",
+        "bench/runs/2026-09-26-x384-lifecycle/manifest.json:$.deviations[].what",
+        "bench/runs/2026-09-26-x385-remedy-completeness/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "eb8cad3720f4adb4e175145769b85f61eaa8846c",
+      "new": "1ba93d4b22c7bd023e29e83dc0e37f5f83f4f389",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "efdaf476cc372ec02114e6b007dec65de8db6dca",
+      "new": "5175564e15f2d72d4870c917b54fd2eb8a2c771b",
+      "reachable_from": [
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-26-x382-destroyed-tests/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "f1a4343038f5d182231f83e9bb8328060dd8cdce",
+      "new": "a3475883a0d8d8300c78d92dbb10530b4346f199",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "f297f308ab83217095dd7e804ac324936bafb5c5",
+      "new": "93e8d4489cf8cb1acbe7541b66fed8f9be70a252",
+      "reachable_from": [
+        "provenance/pr-397-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-26-x382-destroyed-tests/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "f3c7d9ca7a563a3eb41fc25a6b7e23caf81d1b93",
+      "new": "bfcaa5f9cede3bd475f6bd32fd77581bd03a0404",
+      "reachable_from": [
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-27-x394-staged-guardrail/manifest.json:$.freeze_commit",
+        "bench/runs/2026-09-27-x394-staged-guardrail/manifest.json:$.metric_code_revision"
+      ]
+    },
+    {
+      "old": "f563ef22a3df3ea3d367c619dbb3bafe45561f4f",
+      "new": "37271fd0f67e7c4c95965ca88fcf8c8113678160",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    },
+    {
+      "old": "fd5d2e9aa009f6dad1d5fbd3ba661408a0089f2c",
+      "new": "837ef1e0331ed3dd90d48d1bb5d31d6182c7070c",
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "cited_by": [
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.deviations[].what"
+      ]
+    }
+  ],
+  "trees": [
+    {
+      "tree": "5e12864b52b6c0c52b9b1b1f41d5b22fa2576676",
+      "path": "skills/review-code",
+      "in_repository": true,
+      "reachable_from": [
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "example_commit": "e596c36f4aa926293e098811170715905660dd2f",
+      "cited_by": [
+        "bench/arms/review-code-haiku-5-5-high-enforced.json:$.skill_tree",
+        "bench/arms/review-code-haiku-5-5-high-strict-v4.json:$.skill_tree",
+        "bench/arms/review-code-opus-5-5-high-enforced.json:$.skill_tree",
+        "bench/arms/review-code-opus-5-5-high-strict-v4.json:$.skill_tree",
+        "bench/arms/review-code-sonnet-5-5-high-enforced.json:$.skill_tree",
+        "bench/arms/review-code-sonnet-5-5-high-strict-v4.json:$.skill_tree",
+        "bench/arms/review-code-sonnet-high-enforced-x394-control.json:$.skill_tree",
+        "bench/runs/2026-09-28-sonnet-5-5-rebench/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-09-28-unseen-target-comparison/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-09-28-verification-off-staged/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-10-12-last-push-claude-review-code-sonnet/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-10-28-claude-review-code-haiku/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-10-28-claude-review-code-opus/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-10-28-claude-review-code-sonnet/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-10-28-claude-review-code-v4-haiku-r2/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-10-28-claude-review-code-v4-haiku/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-10-28-claude-review-code-v4-opus-r2/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-10-28-claude-review-code-v4-opus/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-10-28-claude-review-code-v4-sonnet-r2/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-10-28-claude-review-code-v4-sonnet/manifest.json:$.arms[].resolved_skill_tree"
+      ],
+      "note": "The benchmark repository also holds this tree."
+    },
+    {
+      "tree": "6862d993a1499009a4d59d54a38a1d34daef9ea7",
+      "path": "skills/review-code",
+      "in_repository": true,
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "example_commit": "c87effd8d8bd3382335b348ab2d9e214d749451d",
+      "cited_by": [
+        "bench/runs/2026-09-24-toy/manifest.json:$.arms[].resolved_skill_tree"
+      ]
+    },
+    {
+      "tree": "6e6c654707781c03719c5cfe6d0381e2e4046522",
+      "path": "skills/review-code",
+      "in_repository": true,
+      "reachable_from": [
+        "provenance/pr-407-head"
+      ],
+      "example_commit": "4b10cdefa41e745c53c53a5ed772bca501094e37",
+      "cited_by": [
+        "bench/arms/review-code-sonnet-high-enforced-x394-trimmed.json:$.skill_tree",
+        "bench/runs/2026-09-27-x394-staged-guardrail/manifest.json:$.arms[].resolved_skill_tree"
+      ]
+    },
+    {
+      "tree": "c3c53da5381dace16876b0f5b7abe4bccc6bc58b",
+      "path": "skills/review-code",
+      "in_repository": true,
+      "reachable_from": [
+        "provenance/pr-397-head",
+        "provenance/pr-407-head",
+        "provenance/pr-413-head"
+      ],
+      "example_commit": "5f511d659b07d3e33ed053e95abdfd400226bb10",
+      "cited_by": [
+        "bench/arms/review-code-sonnet-high-enforced-control.json:$.skill_tree",
+        "bench/arms/review-code-sonnet-high-isolated-control.json:$.skill_tree",
+        "bench/runs/2026-09-24-builtin-baseline/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-09-27-x384-matched-isolation/manifest.json:$.arms[].resolved_skill_tree"
+      ]
+    },
+    {
+      "tree": "59e7df1b15096ccb029b35df78bbc54311795650",
+      "path": "skills/review-code",
+      "in_repository": false,
+      "derived_from": {
+        "tree": "5e12864b52b6c0c52b9b1b1f41d5b22fa2576676",
+        "patch": "bench/runs/2026-09-28-verification-off-staged/candidate.patch"
+      },
+      "note": "Never in kamui/skills, before or after the redaction. Reading tree 5e12864b52 into an index under skills/review-code/ and applying the patch with git apply --cached gives this tree id.",
+      "cited_by": [
+        "bench/arms/review-code-sonnet-high-enforced-verification-off.json:$.skill_tree",
+        "bench/runs/2026-09-28-unseen-target-comparison/manifest.json:$.arms[].resolved_skill_tree",
+        "bench/runs/2026-09-28-verification-off-staged/manifest.json:$.arms[].resolved_skill_tree"
+      ]
+    }
+  ]
+}
