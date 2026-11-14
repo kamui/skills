@@ -163,7 +163,7 @@ $unslop-revise
 
 ### `design-loop`
 
-Improves a site's UI/UX in batches until a council of blind judge agents each score it at or above a threshold on a fixed eight-category rubric. The judges are gated in order, so a later judge is asked only after the earlier ones pass the same version, and a failure at any judge restarts from the first. Each grading round uses a fresh agent that sees the same brief and none of the scores, reports, or fixes from earlier rounds. The threshold defaults to 9.0 in every category. Every batch lands on one branch and one pull request, and it never merges without the user's approval.
+Improves a site's UI/UX in batches until a council of blind judge agents each score it at or above a threshold on a fixed eight-category rubric. The judges are gated in order, so a later judge is asked only after the earlier ones pass the same version, and a failure at any judge restarts from the first. Each grading round uses a fresh agent that sees the same brief and none of the scores, reports, or fixes from earlier rounds. The threshold defaults to 8.0 in every category. Every batch lands on one branch and one pull request, and it never merges without the user's approval.
 
 The host agent needs a headless browser the judges can drive and access to the forge to open the pull request.
 
